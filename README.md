@@ -1,22 +1,10 @@
 # Country Data Explorer
 
-This project is a small Python capstone that collects information about 20 countries, saves it in a database, and turns it into a CSV file and a chart. The dashboard brings the results together in one browser page.
+This project collects information about the first 20 countries on [Scrape This Site](https://www.scrapethissite.com/pages/simple/), stores the records in SQLite, serves them through a FastAPI API, and exports a CSV and chart. The dashboard is the quickest way to run the full workflow. The individual commands are included below as well, so each capstone phase can be run and reviewed on its own.
 
-## What the project does
+## Set up the project
 
-When you run the workflow from the dashboard, it:
-
-1. Collects the first 20 country records from [Scrape This Site](https://www.scrapethissite.com/pages/simple/).
-2. Saves the country name, capital, population, and area in a SQLite database.
-3. Makes the records available through a FastAPI service.
-4. Fetches the API data and writes `exported_countries.csv`.
-5. Creates `population_vs_area.png`, a scatter plot of population and area.
-
-The country name is used as the database key. If a country is already in the database, the workflow updates its record instead of adding a duplicate.
-
-## Run it on Windows
-
-Open PowerShell in this project folder, then create and activate the virtual environment:
+Open PowerShell in the project folder. Create and activate a virtual environment:
 
 ```powershell
 py -m venv .venv
@@ -29,19 +17,59 @@ Install the packages used by the project:
 python -m pip install fastapi uvicorn requests beautifulsoup4 pandas matplotlib
 ```
 
-Start the dashboard:
+The scraper needs an internet connection to reach its source page.
+
+## Option 1: Run the dashboard
+
+This is the simplest way to run the full workflow. From the project folder, start the dashboard:
 
 ```powershell
 python dashboard.py
 ```
 
-The dashboard should open in your browser at [http://127.0.0.1:8000](http://127.0.0.1:8000). If it does not, open that address yourself. Select the button to run the workflow. Keep the PowerShell window open while using the dashboard; press `Ctrl+C` there when you are finished.
+It should open in your browser at [http://127.0.0.1:8000](http://127.0.0.1:8000). If it does not, open that address yourself and use the page's workflow button. The dashboard runs the scraper, saves the records to SQLite, fetches them through the API, exports the CSV, and creates the chart.
 
-The scraper needs an internet connection to reach the source page.
+Keep the PowerShell window open while using the dashboard. Press `Ctrl+C` in that window when you are finished.
+
+## Option 2: Run the capstone phases separately
+
+Use this option to follow the project modules one at a time. Run these commands from the project folder, with the virtual environment activated.
+
+First, scrape and display the country records:
+
+```powershell
+python web_scraping.py
+```
+
+Then save the records to the SQLite database:
+
+```powershell
+python database_handling.py
+```
+
+Start the API in a separate PowerShell window. In that window, change to the project folder and activate `.venv` before running:
+
+```powershell
+uvicorn country_fastapi:app --reload
+```
+
+Leave the API running. In the first PowerShell window, fetch the records from the API and create the CSV:
+
+```powershell
+python client.py
+```
+
+Then create the chart from the CSV:
+
+```powershell
+python visualization.py
+```
+
+The chart uses logarithmic scales on both axes so countries with smaller populations and areas remain visible alongside the largest values.
 
 ## API routes
 
-The API is part of the dashboard server. You can view and try the routes at [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs).
+The API is available while its server is running. The interactive API page is at [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs).
 
 | Method | Route | Purpose |
 |---|---|---|
@@ -54,16 +82,16 @@ The API is part of the dashboard server. You can view and try the routes at [htt
 ## Project files
 
 - `web_scraping.py` collects the country information.
-- `database_handling.py` creates and works with the SQLite database.
+- `database_handling.py` creates and manages the SQLite database.
 - `country_fastapi.py` defines the API and its routes.
-- `client.py` reads country data from the API and exports the CSV.
-- `visualization.py` builds the scatter plot from the CSV.
-- `dashboard.py` connects the modules and serves the browser page.
+- `client.py` fetches API data and exports it to CSV.
+- `visualization.py` creates the population-versus-area chart.
+- `dashboard.py` brings the modules together in a browser page.
 
-## Files created by the workflow
+## Output files
 
-- `countries.db` — the SQLite database.
-- `exported_countries.csv` — the country data exported by the client.
-- `population_vs_area.png` — the population-versus-area chart.
+- `countries.db` — the SQLite database, with the country name as its primary key.
+- `exported_countries.csv` — country records fetched from the API.
+- `population_vs_area.png` — the scatter plot.
 
-The `.gitignore` file keeps the virtual environment and Python cache files out of Git.
+The `.gitignore` file excludes the virtual environment and Python cache files from Git.
